@@ -376,6 +376,23 @@ skill & capital, per the original design.
 job is to make the systems concrete enough to prototype. A paper/spreadsheet
 economy sim should replace them before any UI work.
 
+> **A runnable balance sim now exists:** [`sim/economy_sim.py`](sim/economy_sim.py)
+> (rigorous cap-table + waterfall, plus a Monte-Carlo of the fate-deck loop). It
+> **confirms the systems teach the intended lessons** with these v1 numbers:
+> - *Win the company, lose personally:* a $180M exit (below the ~$221M pref
+>   stack) nets the founder **$0**; a $300M exit nets **$41M but only 13.7%** of
+>   the headline; a $900M exit converts everyone and pays the founder their full
+>   ~27%.
+> - *Raising more isn't winning:* at the **same $600M exit**, disciplined raises
+>   net the founder **$150.9M** vs **$4.0M** when over-raised with participating
+>   prefs.
+> - *Terms matter:* 1× non-participating → founder $42M; 1.5× participating →
+>   $28M at the same $120M exit.
+> - *Skill beats luck (Pillar 3):* disciplined play = **$105M median, 0% bust**;
+>   reckless = **$42M median, 25% bust** with a fat right tail.
+>
+> See [`sim/README.md`](sim/README.md). Numbers below are the sim's inputs.
+
 ### 14.1 Capital & burn (Phase 1)
 - Starting personal capital: **$50K–$150K** (set by Founder card).
 - Monthly burn: **$10K–$40K** depending on team size & admin.
