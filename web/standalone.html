@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cap Table — a Venture Co-op prototype</title>
+    <style>
+:root {
+  --bg: #0c0f1a;
+  --panel: #141a2b;
+  --panel-2: #1b2236;
+  --ink: #e7ecf6;
+  --muted: #8b96b0;
+  --line: #28304a;
+  --founder: #4fd1c5;
+  --pool: #5b6480;
+  --accent: #7c6cff;
+  --good: #4fd1c5;
+  --warn: #f6c177;
+  --bad: #f2748b;
+  --round-colors: #7c6cff, #5aa9e6, #69d2a0, #f6c177, #f2748b;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 80% -10%, #182040 0%, var(--bg) 55%);
+  color: var(--ink);
+  font: 15px/1.5 "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2 { margin: 0; font-weight: 650; }
+h2 { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.hint { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--muted); opacity: 0.8; }
+
+/* ── top bar ─────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; padding: 16px 28px; border-bottom: 1px solid var(--line);
+  background: rgba(12, 15, 26, 0.6); backdrop-filter: blur(8px);
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border-radius: 11px; background: linear-gradient(140deg, var(--accent), #4fd1c5);
+  color: #0c0f1a; font-size: 20px; box-shadow: 0 6px 24px -8px var(--accent);
+}
+.brand h1 { font-size: 19px; letter-spacing: -0.01em; }
+.tag { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+
+.rounds-progress { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.rounds-progress li {
+  font-size: 11px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
+}
+.rounds-progress li.active { color: var(--ink); border-color: var(--accent); background: #1d1d3a; }
+.rounds-progress li.done { color: var(--good); border-color: #25503f; background: #112a23; }
+
+/* ── layout ──────────────────────────────────────────── */
+.layout {
+  display: grid; grid-template-columns: 320px 1fr; gap: 22px;
+  max-width: 1100px; margin: 26px auto; padding: 0 24px;
+}
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 16px; padding: 16px 18px; margin-bottom: 16px;
+}
+.dash { position: sticky; top: 92px; align-self: start; }
+
+/* ── ownership ───────────────────────────────────────── */
+.founder-pct {
+  font-size: 38px; font-weight: 720; letter-spacing: -0.02em;
+  color: var(--founder); margin: 6px 0 12px;
+  transition: color 0.4s;
+}
+.stackbar {
+  display: flex; height: 16px; border-radius: 8px; overflow: hidden;
+  background: var(--panel-2); border: 1px solid var(--line);
+}
+.stackbar span { display: block; height: 100%; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+.legend { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.legend li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.legend .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend b { color: var(--ink); font-weight: 600; margin-left: auto; }
+
+/* ── fate deck ───────────────────────────────────────── */
+.oddsbar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin: 10px 0; background: var(--panel-2); }
+.oddsbar span { height: 100%; transition: width 0.5s; }
+.deck-tally { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.deck-tally li { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+.deck-tally .chip { width: 9px; height: 9px; border-radius: 50%; }
+.deck-tally b { color: var(--ink); }
+
+.band-Breakthrough { background: #8b7bff; }
+.band-Momentum { background: var(--good); }
+.band-Grind { background: var(--pool); }
+.band-Setback { background: var(--warn); }
+.band-Disaster { background: var(--bad); }
+
+.peek-line { margin: 6px 0 0; font-size: 14px; color: var(--ink); }
+.peek-line small { color: var(--muted); }
+
+/* ── stage ───────────────────────────────────────────── */
+.stage { min-height: 380px; }
+.crossroads-head { margin-bottom: 14px; }
+.crossroads-head .kicker { color: var(--accent); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.crossroads-head h2 { font-size: 26px; color: var(--ink); text-transform: none; letter-spacing: -0.01em; margin-top: 2px; }
+.crossroads-head p { color: var(--muted); margin: 6px 0 0; max-width: 56ch; }
+
+.sheets { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+@media (max-width: 560px) { .sheets { grid-template-columns: 1fr; } }
+.sheet {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: 18px; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s;
+}
+.sheet:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 40px -22px var(--accent); }
+.sheet.selected { border-color: var(--founder); box-shadow: 0 0 0 1px var(--founder) inset; }
+.sheet h3 { margin: 0 0 2px; font-size: 17px; }
+.sheet .blurb { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; min-height: 32px; }
+.sheet dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 13px; }
+.sheet dt { color: var(--muted); }
+.sheet dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.sheet .flag-bad { color: var(--bad); }
+.sheet .flag-good { color: var(--good); }
+
+.actions { margin-top: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+button.primary {
+  background: linear-gradient(135deg, var(--accent), #5a7bff); color: white;
+  border: none; padding: 12px 22px; border-radius: 11px; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s;
+}
+button.primary:hover { filter: brightness(1.08); }
+button.primary:active { transform: translateY(1px); }
+button.primary:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+button.ghost {
+  background: transparent; color: var(--muted); border: 1px solid var(--line);
+  padding: 12px 18px; border-radius: 11px; font-size: 14px; cursor: pointer;
+}
+.odds-note { color: var(--muted); font-size: 13px; }
+
+/* fate reveal */
+.reveal { margin-top: 22px; padding: 20px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel-2); }
+.reveal.flash { animation: flash 0.6s ease; }
+@keyframes flash { 0% { transform: scale(0.96); opacity: 0; } 60% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
+.reveal .band-name { font-size: 22px; font-weight: 700; }
+.reveal .band-desc { color: var(--muted); margin: 4px 0 12px; }
+.reveal .delta { font-size: 14px; }
+.reveal .delta b { font-variant-numeric: tabular-nums; }
+
+/* exit */
+.exit-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.exit-buttons button {
+  flex: 1; min-width: 140px; background: var(--panel); border: 1px solid var(--line);
+  color: var(--ink); border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color .15s;
+}
+.exit-buttons button:hover { border-color: var(--accent); }
+/* draining pot */
+.pot { margin: 4px 0 14px; }
+.pot-label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.pot-amount { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); margin: 2px 0 8px; transition: color .3s; }
+.pot-bar { height: 12px; border-radius: 7px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--line); }
+.pot-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--founder)); transition: width 0.55s cubic-bezier(.4,0,.2,1); }
+
+.waterfall { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.wf-row { transition: opacity .45s ease, transform .45s ease; }
+.wf-row.hidden { opacity: 0; transform: translateY(8px); }
+.wf-row.founder-row td { font-weight: 600; }
+
+.counterfactual { margin-top: 16px; padding: 16px 18px; border: 1px dashed var(--line); border-radius: 14px; background: #11152a; }
+.counterfactual .kicker { color: var(--accent); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.counterfactual p { margin: 8px 0 0; color: var(--ink); font-size: 14px; }
+.counterfactual .gain { color: var(--good); }
+.waterfall th, .waterfall td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.waterfall th:first-child, .waterfall td:first-child { text-align: left; }
+.waterfall .founder-row { background: #112a23; }
+.waterfall .zero { color: var(--bad); }
+.lesson { margin-top: 16px; padding: 14px 16px; border-left: 3px solid var(--accent); background: #16182e; border-radius: 0 10px 10px 0; color: var(--ink); font-size: 14px; }
+.lesson b { color: var(--founder); }
+
+/* fate band text colors (reveal headline) */
+.band-text-Breakthrough { color: #a99bff; }
+.band-text-Momentum { color: var(--good); }
+.band-text-Grind { color: #aeb6d0; }
+.band-text-Setback { color: var(--warn); }
+.band-text-Disaster { color: var(--bad); }
+
+</style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">◆</span>
+        <div>
+          <h1>Cap Table</h1>
+          <p class="tag">a Venture Co-op prototype · Phase B — playable Crossroads</p>
+        </div>
+      </div>
+      <ol class="rounds-progress" id="progress"></ol>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: persistent dashboard -->
+      <aside class="dash">
+        <section class="panel ownership">
+          <h2>Your ownership</h2>
+          <div class="founder-pct" id="founderPct">100.0%</div>
+          <div class="stackbar" id="stackbar"></div>
+          <ul class="legend" id="legend"></ul>
+        </section>
+
+        <section class="panel deck">
+          <h2>Fate deck <span class="hint">your luck, as you've stocked it</span></h2>
+          <div class="oddsbar" id="oddsbar"></div>
+          <ul class="deck-tally" id="deckTally"></ul>
+        </section>
+
+        <section class="panel peek">
+          <h2>If you sold today</h2>
+          <p class="peek-line" id="peekLine">—</p>
+        </section>
+      </aside>
+
+      <!-- RIGHT: the stage -->
+      <section class="stage" id="stage"><!-- rendered by app.js --></section>
+    </main>
+
+    <script>
+
+// ───────── src/engine/format.js ─────────
+// Formatting helpers shared across engine + UI.
+
+const fmtMoney = (n) => {
+  const m = n / 1e6;
+  const s = Math.abs(m).toLocaleString("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  return `${n < 0 ? "-" : ""}${s}M`;
+};
+
+const fmtPct = (n) => `${(n * 100).toFixed(1)}%`;
+
+const fmtMoic = (n) => `${n.toFixed(1)}x`;
+
+
+// ───────── src/engine/captable.js ─────────
+// Cap table + liquidation-preference waterfall.
+// Mirror of sim/economy_sim.py — kept numerically identical (parity-tested).
+// PURE: no DOM, no globals.
+
+class CapTable {
+  constructor(founderShares = 10_000_000) {
+    this.founderShares = founderShares;
+    this.poolShares = 0; // unallocated option pool (common)
+    this.rounds = []; // [{ name, invested, shares, prefMultiple, participating, seniority }]
+  }
+
+  totalShares() {
+    return (
+      this.founderShares +
+      this.poolShares +
+      this.rounds.reduce((s, r) => s + r.shares, 0)
+    );
+  }
+
+  founderPct() {
+    return this.founderShares / this.totalShares();
+  }
+
+  /**
+   * Execute a priced round using the standard PRE-MONEY option-pool method:
+   * a pool top-up is created out of the pre-money, diluting founders (and prior
+   * investors) but NOT the incoming investor — the "pool shuffle" lesson.
+   * Returns the investor's resulting ownership fraction.
+   */
+  raiseRound({
+    name,
+    preMoney,
+    raiseAmount,
+    poolTargetPct = 0,
+    prefMultiple = 1,
+    participating = false,
+  }) {
+    const post = preMoney + raiseAmount;
+    const existingNonPool =
+      this.founderShares + this.rounds.reduce((s, r) => s + r.shares, 0);
+
+    const denom = 1 - poolTargetPct - raiseAmount / post;
+    if (denom <= 0) {
+      throw new Error("Round terms imply >=100% dilution; infeasible.");
+    }
+    const T = existingNonPool / denom;
+
+    const investorShares = (raiseAmount / post) * T;
+    const totalPoolAfter = poolTargetPct * T;
+    const newPool = Math.max(0, totalPoolAfter - this.poolShares);
+    const seniority =
+      this.rounds.reduce((m, r) => Math.max(m, r.seniority), 0) + 1;
+
+    this.poolShares += newPool;
+    this.rounds.push({
+      name,
+      invested: raiseAmount,
+      shares: investorShares,
+      prefMultiple,
+      participating,
+      seniority,
+    });
+    return investorShares / T;
+  }
+
+  clone() {
+    const c = new CapTable(this.founderShares);
+    c.poolShares = this.poolShares;
+    c.rounds = this.rounds.map((r) => ({ ...r }));
+    return c;
+  }
+}
+
+/**
+ * Distribute exit proceeds through the liquidation-preference stack.
+ * Non-participating preferred takes MAX(preference, as-converted common);
+ * participating takes preference first, then shares pro-rata (uncapped in v1).
+ * Seniority is stacked (highest paid first). A fixpoint resolves which
+ * non-participating prefs convert. Returns { results, perShare }.
+ */
+function exitWaterfall(cap, exitValue) {
+  const rounds = cap.rounds;
+  const converted = {};
+  rounds.forEach((r) => (converted[r.name] = false));
+
+  let perShare = 0;
+  let prefPayout = {};
+
+  for (let iter = 0; iter < 200; iter++) {
+    let remaining = exitValue;
+    prefPayout = {};
+    const bySeniority = [...rounds].sort((a, b) => b.seniority - a.seniority);
+    for (const r of bySeniority) {
+      const takesPref = r.participating || !converted[r.name];
+      if (takesPref) {
+        const p = Math.min(remaining, r.prefMultiple * r.invested);
+        prefPayout[r.name] = p;
+        remaining -= p;
+      } else {
+        prefPayout[r.name] = 0;
+      }
+    }
+
+    const partShares = rounds
+      .filter((r) => r.participating)
+      .reduce((s, r) => s + r.shares, 0);
+    const convShares = rounds
+      .filter((r) => !r.participating && converted[r.name])
+      .reduce((s, r) => s + r.shares, 0);
+    const commonBase =
+      cap.founderShares + cap.poolShares + partShares + convShares;
+    perShare = commonBase > 0 ? remaining / commonBase : 0;
+
+    let changed = false;
+    for (const r of rounds) {
+      if (r.participating) continue;
+      const should = perShare * r.shares > r.prefMultiple * r.invested;
+      if (should !== converted[r.name]) {
+        converted[r.name] = should;
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+
+  const results = {};
+  for (const r of rounds) {
+    let payout = prefPayout[r.name];
+    if (r.participating || converted[r.name]) payout += perShare * r.shares;
+    results[r.name] = {
+      invested: r.invested,
+      payout,
+      moic: r.invested ? payout / r.invested : 0,
+      converted: converted[r.name],
+      participating: r.participating,
+    };
+  }
+  results["Option Pool"] = {
+    invested: 0,
+    payout: perShare * cap.poolShares,
+    moic: 0,
+  };
+  results["Founders"] = {
+    invested: 0,
+    payout: perShare * cap.founderShares,
+    moic: 0,
+  };
+  return { results, perShare };
+}
+
+/** The partner's personal take: carry on the profit of that investment. */
+const carry = (payout, invested, carryPct = 0.2) =>
+  Math.max(0, payout - invested) * carryPct;
+
+
+// ───────── src/engine/fate.js ─────────
+// The Fate Deck — the core verb. Your choices stock it; Crossroads draw from it.
+// PURE: no DOM. (DESIGN.md §12)
+
+// Outcome bands, ranked best → worst.
+const BAND_ORDER = [
+  "Breakthrough",
+  "Momentum",
+  "Grind",
+  "Setback",
+  "Disaster",
+];
+
+// How a drawn band bends a round's pre-money valuation (up round vs down round).
+const VAL_MULT = {
+  Breakthrough: 1.4,
+  Momentum: 1.15,
+  Grind: 1.0,
+  Setback: 0.8,
+  Disaster: 0.55,
+};
+
+// Short flavor for the UI.
+const BAND_LABEL = {
+  Breakthrough: "Breakthrough — an up round on great terms",
+  Momentum: "Momentum — solid progress, a friendly round",
+  Grind: "Grind — you get there, flat-ish terms",
+  Setback: "Setback — a soft round, more dilution",
+  Disaster: "Disaster — a down round guts your stake",
+};
+
+class FateDeck {
+  // Default Phase-1 deck: small & volatile (DESIGN.md §12.2).
+  constructor(
+    cards = [
+      "Breakthrough",
+      "Momentum",
+      "Momentum",
+      "Grind",
+      "Grind",
+      "Grind",
+      "Setback",
+      "Setback",
+    ],
+  ) {
+    this.cards = [...cards];
+  }
+
+  counts() {
+    const c = Object.fromEntries(BAND_ORDER.map((b) => [b, 0]));
+    for (const x of this.cards) c[x]++;
+    return c;
+  }
+
+  odds() {
+    const c = this.counts();
+    const t = this.cards.length || 1;
+    return Object.fromEntries(BAND_ORDER.map((b) => [b, c[b] / t]));
+  }
+
+  add(band, n = 1) {
+    for (let i = 0; i < n; i++) this.cards.push(band);
+  }
+
+  // Deck thinning — great teams delete downside (DESIGN.md §12.3).
+  remove(band, n = 1) {
+    for (let i = 0; i < n; i++) {
+      const idx = this.cards.indexOf(band);
+      if (idx >= 0) this.cards.splice(idx, 1);
+    }
+  }
+
+  rank(band) {
+    return BAND_ORDER.length - BAND_ORDER.indexOf(band); // higher = better
+  }
+
+  /**
+   * Draw a band. advantage: +1 = draw two keep the better (you cleared the gate
+   * comfortably); -1 = draw two keep the worse (you're "reaching"); 0 = single.
+   * rng() returns [0,1).
+   */
+  draw(rng = Math.random, advantage = 0) {
+    const pick = () => this.cards[Math.floor(rng() * this.cards.length)];
+    if (advantage === 0) return pick();
+    const a = pick();
+    const b = pick();
+    if (advantage > 0) return this.rank(a) >= this.rank(b) ? a : b;
+    return this.rank(a) <= this.rank(b) ? a : b;
+  }
+}
+
+
+// ───────── src/engine/scenarios.js ─────────
+// Illustrative term data (DESIGN.md §14, mirrors sim/economy_sim.py).
+// Each round offers two term sheets at a Crossroads: "standard" (disciplined)
+// and "hot" (raise more, worse terms) — embodying "raising more isn't winning".
+
+const STANDARD_PATH = [
+  { name: "Seed",     preMoney: 6_000_000,   raiseAmount: 1_500_000,  poolTargetPct: 0.10, prefMultiple: 1.0, participating: false },
+  { name: "Series A", preMoney: 30_000_000,  raiseAmount: 10_000_000, poolTargetPct: 0.15, prefMultiple: 1.0, participating: false },
+  { name: "Series B", preMoney: 120_000_000, raiseAmount: 30_000_000, poolTargetPct: 0.12, prefMultiple: 1.0, participating: false },
+  { name: "Series C", preMoney: 350_000_000, raiseAmount: 60_000_000, poolTargetPct: 0.10, prefMultiple: 1.0, participating: false },
+  { name: "Series D", preMoney: 800_000_000, raiseAmount: 120_000_000, poolTargetPct: 0.10, prefMultiple: 1.0, participating: false },
+];
+
+const HOT_PATH = [
+  { name: "Seed",     preMoney: 8_000_000,   raiseAmount: 3_000_000,  poolTargetPct: 0.12, prefMultiple: 1.0, participating: false },
+  { name: "Series A", preMoney: 35_000_000,  raiseAmount: 20_000_000, poolTargetPct: 0.18, prefMultiple: 1.0, participating: false },
+  { name: "Series B", preMoney: 130_000_000, raiseAmount: 60_000_000, poolTargetPct: 0.15, prefMultiple: 1.0, participating: false },
+  { name: "Series C", preMoney: 360_000_000, raiseAmount: 120_000_000, poolTargetPct: 0.12, prefMultiple: 1.0, participating: true },
+  { name: "Series D", preMoney: 820_000_000, raiseAmount: 250_000_000, poolTargetPct: 0.10, prefMultiple: 1.5, participating: true },
+];
+
+
+// ───────── src/game/run.js ─────────
+// Run state machine — sequences Crossroads (funding rounds) and resolves each
+// with a fate draw that bends the round's valuation. PURE: no DOM, unit-tested.
+
+
+class Run {
+  constructor({ rng = Math.random } = {}) {
+    this.rng = rng;
+    this.cap = new CapTable();
+    this.deck = new FateDeck();
+    this.stepIndex = 0;
+    this.history = []; // [{ name, choice, band, preMoney, founderPct, participating }]
+  }
+
+  done() {
+    return this.stepIndex >= STANDARD_PATH.length;
+  }
+
+  // The term sheets on the table for the current round.
+  currentChoices() {
+    const i = this.stepIndex;
+    return { standard: STANDARD_PATH[i], hot: HOT_PATH[i] };
+  }
+
+  /**
+   * Resolve a Crossroads.
+   *   choice: "standard" | "hot"
+   *   forcedBand: optional, for deterministic tests
+   * Chasing "hot" money stocks a Setback and draws with disadvantage —
+   * hot terms buy speed at the cost of fragility (DESIGN.md §12.3).
+   */
+  playRound(choice, forcedBand = null) {
+    if (this.done()) throw new Error("Run already complete.");
+    const terms = (choice === "hot" ? HOT_PATH : STANDARD_PATH)[this.stepIndex];
+
+    let advantage = 0;
+    if (choice === "hot") {
+      this.deck.add("Setback", 1);
+      advantage = -1;
+    } else {
+      this.deck.add("Momentum", 1);
+    }
+
+    const band = forcedBand ?? this.deck.draw(this.rng, advantage);
+    const preMoney = terms.preMoney * VAL_MULT[band];
+
+    this.cap.raiseRound({ ...terms, preMoney });
+    this.stepIndex++;
+
+    const record = {
+      name: terms.name,
+      choice,
+      band,
+      preMoney,
+      participating: terms.participating,
+      founderPct: this.cap.founderPct(),
+    };
+    this.history.push(record);
+    return record;
+  }
+
+  exit(exitValue) {
+    return exitWaterfall(this.cap, exitValue);
+  }
+
+  /** Founder's net at a given exit (used for the live "if you sold now" peek). */
+  founderNet(exitValue) {
+    return exitWaterfall(this.cap, exitValue).results["Founders"].payout;
+  }
+}
+
+/**
+ * The counterfactual ("the road not taken"). Replays the run holding FATE
+ * CONSTANT (same band each round) but substituting different term-sheet
+ * choices — isolating the cost of decisions from luck (DESIGN.md §8.2, Pillar 3).
+ *   chooseFn(record, i) -> "standard" | "hot"
+ */
+function replayWithChoices(history, chooseFn) {
+  const cap = new CapTable();
+  history.forEach((h, i) => {
+    const choice = chooseFn(h, i);
+    const terms = (choice === "hot" ? HOT_PATH : STANDARD_PATH)[i];
+    cap.raiseRound({ ...terms, preMoney: terms.preMoney * VAL_MULT[h.band] });
+  });
+  return cap;
+}
+
+
+// ───────── src/ui/app.js ─────────
+// Playable Crossroads (Phase B) + a basic exit reveal (teaser for Phase C).
+// Renders from a pure Run state machine; this file only touches the DOM.
+
+
+const ROUND_COLORS = ["#7c6cff", "#5aa9e6", "#69d2a0", "#f6c177", "#f2748b"];
+const ALL_ROUNDS = ["Seed", "Series A", "Series B", "Series C", "Series D"];
+const PEEK_EXIT = 300_000_000; // fixed reference: watch your take erode as you raise
+
+const ui = {
+  run: new Run(),
+  selected: null, // "standard" | "hot"
+  phase: "choose", // "choose" | "revealed" | "exit"
+  reveal: null, // { record, prevPct }
+  exitResult: null, // { exitValue, results }
+};
+
+const $ = (id) => document.getElementById(id);
+
+// ── dashboard ──────────────────────────────────────────────────────────────
+function renderDash() {
+  const cap = ui.run.cap;
+  const total = cap.totalShares();
+
+  $("founderPct").textContent = fmtPct(cap.founderPct());
+
+  const segs = [
+    { label: "Founders", shares: cap.founderShares, color: "var(--founder)" },
+    ...cap.rounds.map((r, i) => ({
+      label: r.name,
+      shares: r.shares,
+      color: ROUND_COLORS[i % ROUND_COLORS.length],
+    })),
+    { label: "Option pool", shares: cap.poolShares, color: "var(--pool)" },
+  ].filter((s) => s.shares > 0);
+
+  $("stackbar").innerHTML = segs
+    .map(
+      (s) =>
+        `<span style="width:${(s.shares / total) * 100}%;background:${s.color}"></span>`,
+    )
+    .join("");
+
+  $("legend").innerHTML = segs
+    .map(
+      (s) =>
+        `<li><span class="dot" style="background:${s.color}"></span>${s.label}<b>${fmtPct(
+          s.shares / total,
+        )}</b></li>`,
+    )
+    .join("");
+
+  // fate deck
+  const odds = ui.run.deck.odds();
+  const counts = ui.run.deck.counts();
+  $("oddsbar").innerHTML = BAND_ORDER.map(
+    (b) => `<span class="band-${b}" style="width:${odds[b] * 100}%"></span>`,
+  ).join("");
+  $("deckTally").innerHTML = BAND_ORDER.map(
+    (b) =>
+      `<li><span class="chip band-${b}"></span>${b} <b>${counts[b]}</b></li>`,
+  ).join("");
+
+  // "if you sold today" peek
+  const net = ui.run.founderNet(PEEK_EXIT);
+  $("peekLine").innerHTML =
+    `At a ${fmtMoney(PEEK_EXIT)} exit you'd net <b>${fmtMoney(net)}</b><br>` +
+    `<small>${fmtPct(net / PEEK_EXIT)} of the headline number</small>`;
+
+  // progress rail
+  $("progress").innerHTML = [...ALL_ROUNDS, "Exit"]
+    .map((name, i) => {
+      let cls = "";
+      if (i < ui.run.stepIndex) cls = "done";
+      else if (i === ui.run.stepIndex && ui.phase !== "exit") cls = "active";
+      else if (name === "Exit" && ui.phase === "exit") cls = "active";
+      return `<li class="${cls}">${name}</li>`;
+    })
+    .join("");
+}
+
+// ── stage ──────────────────────────────────────────────────────────────────
+function sheetCard(kind, terms) {
+  const post = terms.preMoney + terms.raiseAmount;
+  const toInvestor = terms.raiseAmount / post;
+  const prefTxt = `${terms.prefMultiple}× ${terms.participating ? "participating" : "non-participating"}`;
+  const prefClass = terms.participating || terms.prefMultiple > 1 ? "flag-bad" : "flag-good";
+  const blurb =
+    kind === "standard"
+      ? "Disciplined. Smaller check, clean terms, more runway pressure."
+      : "Hot money. Bigger check now — but worse terms and a Setback in your deck.";
+  return `
+    <div class="sheet ${ui.selected === kind ? "selected" : ""}" data-kind="${kind}">
+      <h3>${kind === "standard" ? "Standard sheet" : "Hot money"}</h3>
+      <p class="blurb">${blurb}</p>
+      <dl>
+        <dt>Raise</dt><dd>${fmtMoney(terms.raiseAmount)}</dd>
+        <dt>Pre-money</dt><dd>${fmtMoney(terms.preMoney)}</dd>
+        <dt>To investor</dt><dd>≈ ${fmtPct(toInvestor)}</dd>
+        <dt>Option pool</dt><dd>${fmtPct(terms.poolTargetPct)}</dd>
+        <dt>Liq. pref</dt><dd class="${prefClass}">${prefTxt}</dd>
+      </dl>
+    </div>`;
+}
+
+function renderChoose() {
+  const { standard, hot } = ui.run.currentChoices();
+  const odds = ui.run.deck.odds();
+  const oddsTxt = BAND_ORDER.filter((b) => odds[b] > 0)
+    .map((b) => `${fmtPct(odds[b])} ${b}`)
+    .join(" · ");
+
+  $("stage").innerHTML = `
+    <div class="crossroads-head">
+      <div class="kicker">Crossroads · Funding round</div>
+      <h2>${standard.name} — choose your term sheet</h2>
+      <p>Then you'll draw <em>fate</em> from the deck you've stocked: a good draw is an
+         up round, a bad one a dilutive down round. The terms you sign echo all the way
+         to the exit waterfall.</p>
+    </div>
+    <div class="sheets">${sheetCard("standard", standard)}${sheetCard("hot", hot)}</div>
+    <div class="actions">
+      <button class="primary" id="signBtn" ${ui.selected ? "" : "disabled"}>
+        Sign &amp; draw fate
+      </button>
+      <span class="odds-note">${ui.selected ? `Deck odds: ${oddsTxt}${ui.selected === "hot" ? " — drawn at a disadvantage" : ""}` : "Pick a sheet to see your odds."}</span>
+    </div>`;
+
+  $("stage")
+    .querySelectorAll(".sheet")
+    .forEach((el) =>
+      el.addEventListener("click", () => {
+        ui.selected = el.dataset.kind;
+        renderChoose();
+      }),
+    );
+  const signBtn = $("signBtn");
+  if (signBtn) signBtn.addEventListener("click", doSign);
+}
+
+function doSign() {
+  const prevPct = ui.run.cap.founderPct();
+  const record = ui.run.playRound(ui.selected);
+  ui.reveal = { record, prevPct };
+  ui.phase = "revealed";
+  render();
+}
+
+function renderRevealed() {
+  const { record, prevPct } = ui.reveal;
+  const mult = VAL_MULT[record.band];
+  $("stage").innerHTML = `
+    <div class="crossroads-head">
+      <div class="kicker">${record.name} · fate drawn</div>
+      <h2>${record.name} closed</h2>
+    </div>
+    <div class="reveal flash">
+      <div class="band-name band-text-${record.band}">${record.band}</div>
+      <div class="band-desc">${BAND_LABEL[record.band]}</div>
+      <div class="delta">
+        Pre-money moved to <b>${fmtMoney(record.preMoney)}</b> (×${mult.toFixed(2)}).<br>
+        Your stake: <b>${fmtPct(prevPct)}</b> → <b>${fmtPct(record.founderPct)}</b>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="nextBtn">
+        ${ui.run.done() ? "Head to the exit →" : "Continue →"}
+      </button>
+    </div>`;
+  $("nextBtn").addEventListener("click", () => {
+    ui.selected = null;
+    ui.reveal = null;
+    ui.phase = ui.run.done() ? "exit" : "choose";
+    render();
+  });
+}
+
+function renderExit() {
+  if (!ui.exitResult) {
+    $("stage").innerHTML = `
+      <div class="crossroads-head">
+        <div class="kicker">The exit</div>
+        <h2>Time to sell. For how much?</h2>
+        <p>Same company, three outcomes. Watch how much of the headline number actually
+           reaches <em>you</em> once the liquidation-preference stack is paid.</p>
+      </div>
+      <div class="exit-buttons">
+        <button data-exit="180000000"><b>Modest</b><br>$180M exit</button>
+        <button data-exit="300000000"><b>Good</b><br>$300M exit</button>
+        <button data-exit="900000000"><b>Great</b><br>$900M exit</button>
+      </div>`;
+    $("stage")
+      .querySelectorAll("[data-exit]")
+      .forEach((b) =>
+        b.addEventListener("click", () => {
+          const exitValue = Number(b.dataset.exit);
+          ui.exitResult = { exitValue, ...ui.run.exit(exitValue) };
+          render();
+        }),
+      );
+    return;
+  }
+
+  const { exitValue, results } = ui.exitResult;
+  const seed = results["Seed"];
+
+  // Reveal order: senior preferred → junior → option pool → FOUNDERS LAST (the
+  // emotional beat). Sum of all payouts == exitValue, so the "remaining" pot
+  // drains to ~0 exactly as the founders' slice is revealed.
+  const order = [...ui.run.cap.rounds]
+    .sort((a, b) => b.seniority - a.seniority)
+    .map((r) => r.name);
+  order.push("Option Pool", "Founders");
+
+  const rowHtml = (h) => {
+    const r = results[h];
+    const note =
+      h === "Founders" || h === "Option Pool"
+        ? ""
+        : r.participating ? "participating" : r.converted ? "converted → common" : "took pref";
+    const zero = r.payout < 1 ? "zero" : "";
+    return `<tr class="wf-row hidden ${h === "Founders" ? "founder-row" : ""}" data-h="${h}">
+      <td>${h}</td>
+      <td>${r.invested ? fmtMoney(r.invested) : "—"}</td>
+      <td class="walks ${zero}">${fmtMoney(r.payout)}</td>
+      <td>${r.invested ? fmtMoic(r.moic) : "—"}</td>
+      <td style="text-align:left;color:var(--muted)">${note}</td>
+    </tr>`;
+  };
+
+  $("stage").innerHTML = `
+    <div class="crossroads-head">
+      <div class="kicker">Exit waterfall · ${fmtMoney(exitValue)}</div>
+      <h2>Who got paid</h2>
+      <p>Watch the proceeds drain through the preference stack, senior first.
+         You're paid <em>last</em>.</p>
+    </div>
+    <div class="pot">
+      <div class="pot-label">Remaining to distribute</div>
+      <div class="pot-amount" id="potAmount">${fmtMoney(exitValue)}</div>
+      <div class="pot-bar"><span id="potBar" style="width:100%"></span></div>
+    </div>
+    <table class="waterfall">
+      <thead><tr><th>Holder</th><th>Invested</th><th>Walks out</th><th>MOIC</th><th>&nbsp;</th></tr></thead>
+      <tbody>${order.map(rowHtml).join("")}</tbody>
+    </table>
+    <div id="exitFooter"></div>`;
+
+  // staged reveal
+  let remaining = exitValue;
+  const stage = $("stage");
+  order.forEach((h, i) => {
+    setTimeout(() => {
+      const row = stage.querySelector(`tr[data-h="${h}"]`);
+      if (!row) return;
+      row.classList.remove("hidden");
+      remaining = Math.max(0, remaining - results[h].payout);
+      $("potAmount").textContent = fmtMoney(remaining);
+      $("potBar").style.width = `${(remaining / exitValue) * 100}%`;
+      if (i === order.length - 1) revealExitFooter();
+    }, 200 + i * 650);
+  });
+}
+
+function revealExitFooter() {
+  const { exitValue, results } = ui.exitResult;
+  const founder = results["Founders"].payout;
+  const seed = results["Seed"];
+
+  // counterfactual: same fate, disciplined terms every round
+  const tookHot = ui.run.history.some((h) => h.choice === "hot");
+  const cfCap = replayWithChoices(ui.run.history, () => "standard");
+  const cfNet = exitWaterfall(cfCap, exitValue).results["Founders"].payout;
+  const delta = cfNet - founder;
+
+  const lesson =
+    founder < 1
+      ? `You built a <b>${fmtMoney(exitValue)}</b> company and walked away with <b>$0</b>. The
+         ${fmtMoney(ui.run.cap.rounds.reduce((s, r) => s + r.invested, 0))} preference stack was
+         paid in full before common stock saw a cent.`
+      : `You own ${fmtPct(ui.run.cap.founderPct())} of the company, but netted
+         <b>${fmtMoney(founder)}</b> — only ${fmtPct(founder / exitValue)} of the
+         ${fmtMoney(exitValue)} headline. The gap is the preference stack and the option pool.`;
+
+  const counterfactual =
+    tookHot && delta > 1
+      ? `<div class="counterfactual">
+           <div class="kicker">The road not taken</div>
+           <p>Same fate, but disciplined terms every round: you'd have netted
+              <b>${fmtMoney(cfNet)}</b> — <b class="gain">${fmtMoney(delta)} more</b> at this
+              very same exit. Chasing hot money cost you that, holding luck constant.</p>
+         </div>`
+      : `<div class="counterfactual">
+           <div class="kicker">The road not taken</div>
+           <p>You ran the disciplined line — there was no cheaper path to this outcome given
+              your fate. Well played.</p>
+         </div>`;
+
+  $("exitFooter").innerHTML = `
+    <p class="odds-note" style="margin-top:14px">
+      The Seed partner's personal carry on this deal:
+      <b>${fmtMoney(carry(seed.payout, seed.invested))}</b>
+      (their fund's ${fmtMoic(seed.moic)} return is what carry is paid on).
+    </p>
+    <div class="lesson">${lesson}</div>
+    ${counterfactual}
+    <div class="actions">
+      <button class="ghost" id="tryAnother">Try another exit</button>
+      <button class="primary" id="replay">Run it back</button>
+    </div>`;
+
+  $("tryAnother").addEventListener("click", () => {
+    ui.exitResult = null;
+    render();
+  });
+  $("replay").addEventListener("click", () => {
+    Object.assign(ui, { run: new Run(), selected: null, phase: "choose", reveal: null, exitResult: null });
+    render();
+  });
+}
+
+// ── top-level render ─────────────────────────────────────────────────────────
+function render() {
+  renderDash();
+  if (ui.phase === "choose") renderChoose();
+  else if (ui.phase === "revealed") renderRevealed();
+  else renderExit();
+}
+
+render();
+
+</script>
+  </body>
+</html>

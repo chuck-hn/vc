@@ -46,10 +46,23 @@ web/
 ```
 
 ## Run it
+
+**Easiest — no tools needed:** open **`web/standalone.html`** directly in any
+browser (double-click it). It's a single self-contained file (CSS + JS inlined,
+no `import`s, no network) — works over `file://`, no server required.
+
 ```bash
-# tests
+# regenerate the standalone after editing anything under web/src or styles.css
+node web/build.mjs
+
+# the engine tests
 node --test "web/test/*.test.mjs"
 
-# the app
-cd web && python3 -m http.server 8000   # then open http://localhost:8000
+# OR serve the modular version (if you have a server handy)
+npx serve web            # Node
+python3 -m http.server   # from web/, if you have Python
 ```
+
+> ES modules under `src/` are the source of truth; `web/standalone.html` is a
+> generated bundle (`web/build.mjs`) so it can be opened without any toolchain.
+
