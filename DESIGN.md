@@ -1,8 +1,8 @@
 # Venture Co-op — Game Design Document
 
-> **Status:** Living design doc — vision & core systems locked in brainstorm; numbers and content TBD.
+> **Status:** Living design doc — vision & core systems locked; **v1 first-pass** of fate-deck rules, idea archetypes, and economic skeleton drafted (§12–14). Numbers are illustrative placeholders pending a balance sim.
 > **Studio:** Venture Co-op
-> **Working title:** _TBD_ (see [Open Knobs](#open-knobs--todos))
+> **Working title:** **"Cap Table"** _(v1 placeholder — shortlist & decision in §10)_
 > **Last updated:** 2026-06-04
 
 ---
@@ -261,29 +261,175 @@ self**, not a stranger.
 
 ## 10. Open Knobs & TODOs
 
-These are deliberately unresolved; flagged so we don't pretend they're decided.
+v1 first-pass calls are made below; ✅ = decided for v1 (still revisitable),
+⬜ = still genuinely open.
 
-- [ ] **Game title** (studio is Venture Co-op).
-- [ ] **# of Phase 1 focus dials** — provisionally **3** (Build / Users /
-      Conserve) to avoid analysis paralysis. _(Judgment call — revisit.)_
-- [ ] **Weather forecast horizon** — provisionally **~1–2 quarters** of partial
-      visibility. Pure tuning dial: more foresight = gentler & more teaching;
-      less = harsher. _(Judgment call — revisit.)_
-- [ ] **Pedagogy dosage** — confirm "burn first, explain in post-mortem" vs.
-      warning players *before* they sign (gentler, less punishing).
-- [ ] **Session length target** — "like Cashflow online" implies a settle-in
-      30–60 min run; confirm and design pacing to it.
-- [ ] **Fate deck stocking — exact rules.** Which specific actions add/remove
-      which cards, and the starting composition per Idea archetype. _(Next
-      brainstorm topic.)_
-- [ ] **Idea / sector archetypes** — the card pools that make each run feel
-      different (B2B SaaS, marketplace, …). _(Next brainstorm topic.)_
-- [ ] **All numbers** — burn, income curves, valuations, pref multiples, fate
-      band thresholds. Recommend a paper/spreadsheet economy sim before UI.
+- ⬜ **Game title** — v1 working title **"Cap Table"** (nails the curriculum and
+      is ownable). **Shortlist for your pick:** *Cap Table · Runway · Down Round ·
+      Founder's Share · The Waterfall · Carry · Term Sheet.* _(Your creative call —
+      confirm or override.)_
+- ✅ **# of Phase 1 focus dials = 3** (Build / Users / Conserve). _(Revisit if
+      playtests feel thin.)_
+- ✅ **Weather forecast horizon ≈ 1–2 quarters** of partial visibility. _(Pure
+      tuning dial.)_
+- ✅ **Pedagogy = "burn first, explain in post-mortem"** — **with a safety net:**
+      a dismissible **red-flag warning** before the truly punishing, irreversible
+      cap-table mistakes (e.g. stacking participating prefs), so players don't lose
+      40 turns later to something they never had a chance to understand. Everything
+      else is learned by getting burned. (See §15.)
+- ✅ **Session length ≈ 30–60 min** per full run ("like Cashflow online"): ~10–15
+      Crossroads, Sprint montages a few seconds each. A faster "quick run" and a
+      longer "campaign" mode are post-v1 ideas.
+- ✅ **Fate-deck stocking rules** — first-pass spec in **§12**.
+- ✅ **Idea / sector archetypes** — first-pass set of five in **§13**.
+- ✅ **Economic skeleton** (burn, raises, valuations, pref multiples, fate bands)
+      — illustrative v1 numbers in **§14**. **Still need a balance sim** before any
+      of these are trustworthy.
 
 ---
 
-## 11. Inspirations
+## 12. Fate Deck — v1 Rules
+
+The fate deck is the **core verb**: your choices stock it, and at Crossroads you
+draw from it to resolve uncertain attempts. v1 spec below.
+
+### 12.1 The five bands (cards map to graduated outcomes)
+| Card | Outcome band | Role |
+|---|---|---|
+| **Breakthrough** | crit success | rare; earned by excellence — outsized Fit/revenue gain, sometimes a free term concession |
+| **Momentum** | success | the backbone — solid progress |
+| **Grind** | partial | the neutral filler — some progress, but slow or costly |
+| **Setback** | failure | earned by cutting corners / overspending — lost time, a relationship ding |
+| **Disaster** | crit failure | rare; earned by recklessness / ignored warnings — runway shock, a forced down round, can spawn a second Setback |
+
+### 12.2 Starting composition (small & volatile in Phase 1)
+Base Phase-1 deck ≈ **8 cards**: `Breakthrough ×1 · Momentum ×2 · Grind ×3 ·
+Setback ×2 · Disaster ×0`. A small deck means each draw swings hard — the chaos
+of zero-to-one. (Each Idea archetype tweaks this; see §13.) By late Phase 2 the
+deck grows to ~16–20 and **stabilizes** (more Momentum, thinned Setbacks), so
+variance compresses as competence compounds.
+
+### 12.3 How cards enter, leave, and upgrade (the verb)
+- **Burn Aggression is the central tradeoff:** cranking it yields more
+  Fit-progress per month *but shuffles in Setback cards*. Speed literally
+  poisons your luck — aggression is never free.
+- **Quality execution** (code review, user research, proper hiring process) →
+  +Momentum, and upgrades `Grind → Momentum`.
+- **Recklessness / ignored red flags / zero runway buffer** → +Disaster.
+- **A-/S-player hires** → **thin the deck**: remove Setback/Disaster *and* add
+  Momentum. Great teams delete downside (Pillar of §6.2).
+- **Upskilling** → upgrades (`Setback → Grind`, `Grind → Momentum`) and narrows
+  band severity.
+- **Relationships** → investor trust grants a **mulligan** at a raise; partner
+  alignment adds Momentum; employee neglect adds Setback.
+- **Weather** → bad climate *temporarily* injects "market" Setback cards that
+  flush out when the climate passes (downturns worsen luck, recoverably).
+- **Pivots** → partial reshuffle: discard a chunk of the deck (clears accumulated
+  Setbacks *and* Momentum) for a fresh-but-costly start.
+
+### 12.4 Drawing at a Crossroads
+- Each check has a **difficulty** set by the Fit-bar gate for that round.
+- **Advantage / disadvantage from your margin:** clear the gate comfortably →
+  draw 2, keep the better; attempt while under-qualified ("reaching") → draw 2,
+  keep the worse. This ties Fit bars directly to luck.
+- **Odds preview** before every draw: deck composition shown as
+  `≈ 60% Momentum+ / 30% Setback / 10% Disaster`, so the player faces the core
+  tension — **ship one more win to improve the deck, or gamble now because
+  runway's short.**
+- **Anti-helplessness (Pillar 3):** cash reserves, investor trust, or "prepared"
+  status can re-draw or **downgrade a Disaster to a Setback.** A careful player is
+  never truly helpless — they bought insurance. This teaches risk management.
+- Most cards reshuffle after use; Breakthroughs may be **consumed** (one-time).
+
+> _TODO: exact gain/loss magnitudes per band, advantage thresholds, and how many
+> cards a pivot discards — all pending the balance sim (§14)._
+
+---
+
+## 13. Idea / Sector Archetypes — v1
+
+Each archetype is a different **risk/reward shape** that teaches a different
+financial lesson. It sets capital/knowledge intensity (burn shape), TAM &
+multiple (valuation), which Fit bar gates hardest, and a starting fate-deck
+tweak. v1 ships **five**; more are a post-v1 content pool.
+
+| Archetype | Capital / Knowledge | Gating Fit bar | Fate-deck flavor | Teaches |
+|---|---|---|---|---|
+| **B2B SaaS** | moderate / high | Problem/Solution (long sales cycles) | steady (fewer Breakthroughs *and* Disasters) | capital efficiency, recurring revenue & retention, the slow grind to enterprise traction |
+| **Marketplace** | high / moderate | Initial Market Traction (liquidity) | volatile (more Breakthroughs *and* Disasters) | network effects, the cold-start (chicken-and-egg) problem, why marketplaces raise big |
+| **Consumer App** | low-start / moderate | Product/Market (engagement & retention) | extreme variance, small deck (lottery ticket) | virality, the "great engagement, no revenue" trap, why VCs want a waitlist first |
+| **Deep Tech / Hardware** | very high / very high | Vision/Founder + technical milestones | front-loaded Disasters, game-changing Breakthroughs | capital intensity, long runways, milestone de-risking, **the biggest dilution lesson** |
+| **Fintech** | high / high | compliance & trust milestones | low Breakthrough, rare-but-severe Disaster (tail risk) | regulated-market risk, trust as a moat, catastrophic single-point failures |
+
+The game still sets each run's **default business model, TAM, and industry
+multiple** (which scales with revenue) on top of the Founder card's starting
+skill & capital, per the original design.
+
+> _TODO: per-archetype starting numbers (burn curve, TAM size, multiple range,
+> exact deck tweak) — feed the balance sim (§14)._
+
+---
+
+## 14. Economic Skeleton — v1 (illustrative placeholders)
+
+**⚠️ These numbers are first-pass and almost certainly unbalanced.** Their only
+job is to make the systems concrete enough to prototype. A paper/spreadsheet
+economy sim should replace them before any UI work.
+
+### 14.1 Capital & burn (Phase 1)
+- Starting personal capital: **$50K–$150K** (set by Founder card).
+- Monthly burn: **$10K–$40K** depending on team size & admin.
+- Goal: reach MVP + first traction inside 24 months without hitting $0.
+
+### 14.2 Funding rounds (illustrative)
+| Round | Raise | Post-money | ~Dilution | Default pref (founder-friendly baseline) |
+|---|---|---|---|---|
+| Seed | $0.5–2M | $4–8M | ~20–25% | 1× non-participating |
+| Series A | $5–15M | $20–60M | ~20% | 1× non-participating |
+| Series B | $20–40M | $80–200M | ~18% | 1× non-participating |
+| Series C | $40–80M | $200–600M | ~15% | 1× (participating creeps in if you're "reaching") |
+| Series D | $80–150M | $600M–1.5B | ~12% | 1×–1.5×, participation more likely |
+
+- **Option pool:** 10–20% refreshed **pre-money** each round (comes out of *your*
+  slice — the shuffle).
+- **Tough Weather or under-qualified raises** push terms worse: participating
+  prefs, higher multiples, anti-dilution ratchets, bigger pool refreshes — the
+  levers that hollow out the founder's waterfall.
+
+### 14.3 Upskilling (from the original design — kept)
+- Level 1 (B-player): **$5K** · Level 2 (A-player): **$25K** · Level 3
+  (S-player): **$50K**. Adds +3/+1 effective turns in Phase 1/2 (L1–2) or +6/+2
+  (L3); L3 surfaces a strategy hint ~once every 6 turns.
+
+### 14.4 Fate band effects (placeholder magnitudes)
+- Breakthrough: ++Fit / ++revenue, occasional free term concession.
+- Momentum: +Fit progress on the focused dial.
+- Grind: small +Fit but +extra runway cost.
+- Setback: lose ~1 month of progress and/or a relationship tick.
+- Disaster: runway shock (e.g. −3–6 months), possible forced down round, may
+  spawn a Setback.
+
+> _TODO: the actual balance sim — convert all ranges above into tuned curves and
+> verify the loop is fun and the math teaches the intended lessons._
+
+---
+
+## 15. Pedagogy — v1 Dosage
+
+**Burn first, explain in the post-mortem** — concepts are learned by getting
+burned and fully understood at the waterfall; this teaches harder and fuels
+replay. **One safety net:** a **dismissible red-flag warning** fires before the
+*truly punishing, irreversible* cap-table mistakes (stacking participating prefs,
+accepting a full ratchet, an over-large pool refresh). The player can wave it
+away and learn the hard way — but they always had the chance to understand the
+stakes. Teaching channels that already exist reinforce this: **Founder-card
+skills** that reveal factual knowledge, and **S-player mentors** (rate-limited
+hints). The **post-mortem counterfactual** (§8.2) is where the deepest learning
+lands.
+
+---
+
+## 16. Inspirations
 
 - **Cashflow** (Robert Kiyosaki) — financial literacy made legible & playable;
   the settle-in turn cadence; income statement / balance sheet as the heart.
