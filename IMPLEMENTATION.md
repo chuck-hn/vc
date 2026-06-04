@@ -21,8 +21,8 @@ the pure game logic stays framework-free so it can be tested headlessly with
 |---|---|---|
 | **A — Engine** | Port `CapTable` + `exitWaterfall` + `FateDeck` to JS; Node parity tests vs the Python sim | ✅ done |
 | **B — Playable Crossroads** | One interactive funding round: choose terms → see fate-deck odds → draw fate → watch ownership move | ✅ done |
-| **C — Exit Waterfall** | The two-sided payout reveal + the counterfactual ("the road not taken") | ⬜ next |
-| **D — Sprint loop** | Burn-Aggression dial → montage → runway, between Crossroads | ⬜ |
+| **C — Exit Waterfall** | Animated draining two-sided payout (senior→junior, founders last) + the counterfactual ("the road not taken", same fate / disciplined terms) | ✅ done |
+| **D — Sprint loop** | Burn-Aggression dial → montage → runway, between Crossroads | ⬜ next |
 | **E — Full run** | Phase 1 → Phase 2 → Exit, wired end to end with the Weather & relationships | ⬜ |
 
 ## Layout

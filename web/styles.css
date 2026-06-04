@@ -153,7 +153,22 @@ button.ghost {
   color: var(--ink); border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color .15s;
 }
 .exit-buttons button:hover { border-color: var(--accent); }
+/* draining pot */
+.pot { margin: 4px 0 14px; }
+.pot-label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.pot-amount { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); margin: 2px 0 8px; transition: color .3s; }
+.pot-bar { height: 12px; border-radius: 7px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--line); }
+.pot-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--founder)); transition: width 0.55s cubic-bezier(.4,0,.2,1); }
+
 .waterfall { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.wf-row { transition: opacity .45s ease, transform .45s ease; }
+.wf-row.hidden { opacity: 0; transform: translateY(8px); }
+.wf-row.founder-row td { font-weight: 600; }
+
+.counterfactual { margin-top: 16px; padding: 16px 18px; border: 1px dashed var(--line); border-radius: 14px; background: #11152a; }
+.counterfactual .kicker { color: var(--accent); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.counterfactual p { margin: 8px 0 0; color: var(--ink); font-size: 14px; }
+.counterfactual .gain { color: var(--good); }
 .waterfall th, .waterfall td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .waterfall th:first-child, .waterfall td:first-child { text-align: left; }
 .waterfall .founder-row { background: #112a23; }

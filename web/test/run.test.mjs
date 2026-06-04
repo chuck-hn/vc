@@ -1,7 +1,8 @@
 // Run state-machine behavior.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Run } from "../src/game/run.js";
+import { Run, replayWithChoices } from "../src/game/run.js";
+import { exitWaterfall } from "../src/engine/captable.js";
 
 const approx = (a, b, tol) =>
   assert.ok(Math.abs(a - b) <= tol, `${a} ≉ ${b} (tol ${tol})`);
@@ -36,4 +37,20 @@ test("founderNet peek rises with a bigger exit", () => {
   while (!run.done()) run.playRound("standard", "Grind");
   assert.ok(run.founderNet(900e6) > run.founderNet(300e6));
   approx(run.founderNet(180e6), 0, 1); // underwater
+});
+
+test("counterfactual: disciplined terms beat hot money at the same fate/exit", () => {
+  const run = new Run();
+  while (!run.done()) run.playRound("hot", "Grind"); // took hot money every round
+  const actual = run.founderNet(900e6);
+  const cf = replayWithChoices(run.history, () => "standard"); // same fate, disciplined
+  const cfNet = exitWaterfall(cf, 900e6).results.Founders.payout;
+  assert.ok(cfNet > actual, `disciplined ${cfNet} should beat hot ${actual}`);
+});
+
+test("counterfactual with identical choices reproduces the same outcome", () => {
+  const run = new Run();
+  while (!run.done()) run.playRound("standard", "Momentum");
+  const cf = replayWithChoices(run.history, () => "standard");
+  approx(cf.founderPct(), run.cap.founderPct(), 1e-9);
 });

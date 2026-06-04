@@ -1,10 +1,10 @@
 // Playable Crossroads (Phase B) + a basic exit reveal (teaser for Phase C).
 // Renders from a pure Run state machine; this file only touches the DOM.
 
-import { Run } from "../game/run.js";
+import { Run, replayWithChoices } from "../game/run.js";
 import { BAND_ORDER, BAND_LABEL, VAL_MULT } from "../engine/fate.js";
 import { fmtMoney, fmtPct, fmtMoic } from "../engine/format.js";
-import { carry } from "../engine/captable.js";
+import { carry, exitWaterfall } from "../engine/captable.js";
 
 const ROUND_COLORS = ["#7c6cff", "#5aa9e6", "#69d2a0", "#f6c177", "#f2748b"];
 const ALL_ROUNDS = ["Seed", "Series A", "Series B", "Series C", "Series D"];
@@ -205,51 +205,113 @@ function renderExit() {
   }
 
   const { exitValue, results } = ui.exitResult;
-  const founder = results["Founders"].payout;
   const seed = results["Seed"];
-  const rows = ["Founders", ...ui.run.cap.rounds.map((r) => r.name), "Option Pool"]
-    .map((h) => {
-      const r = results[h];
-      const note = h === "Founders" || h === "Option Pool"
+
+  // Reveal order: senior preferred → junior → option pool → FOUNDERS LAST (the
+  // emotional beat). Sum of all payouts == exitValue, so the "remaining" pot
+  // drains to ~0 exactly as the founders' slice is revealed.
+  const order = [...ui.run.cap.rounds]
+    .sort((a, b) => b.seniority - a.seniority)
+    .map((r) => r.name);
+  order.push("Option Pool", "Founders");
+
+  const rowHtml = (h) => {
+    const r = results[h];
+    const note =
+      h === "Founders" || h === "Option Pool"
         ? ""
         : r.participating ? "participating" : r.converted ? "converted → common" : "took pref";
-      const zero = r.payout < 1 ? "zero" : "";
-      return `<tr class="${h === "Founders" ? "founder-row" : ""}">
-        <td>${h}</td>
-        <td>${r.invested ? fmtMoney(r.invested) : "—"}</td>
-        <td class="${zero}">${fmtMoney(r.payout)}</td>
-        <td>${r.invested ? fmtMoic(r.moic) : "—"}</td>
-        <td style="text-align:left;color:var(--muted)">${note}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const lesson =
-    founder < 1
-      ? `You built a <b>${fmtMoney(exitValue)}</b> company and walked away with <b>$0</b>. The
-         ${fmtMoney(ui.run.cap.rounds.reduce((s, r) => s + r.invested, 0))} preference stack was paid
-         in full before common stock saw a cent.`
-      : `You own ${fmtPct(ui.run.cap.founderPct())} of the company, but netted
-         <b>${fmtMoney(founder)}</b> — ${fmtPct(founder / exitValue)} of the
-         ${fmtMoney(exitValue)} headline. The gap is the preference stack and the option pool.`;
+    const zero = r.payout < 1 ? "zero" : "";
+    return `<tr class="wf-row hidden ${h === "Founders" ? "founder-row" : ""}" data-h="${h}">
+      <td>${h}</td>
+      <td>${r.invested ? fmtMoney(r.invested) : "—"}</td>
+      <td class="walks ${zero}">${fmtMoney(r.payout)}</td>
+      <td>${r.invested ? fmtMoic(r.moic) : "—"}</td>
+      <td style="text-align:left;color:var(--muted)">${note}</td>
+    </tr>`;
+  };
 
   $("stage").innerHTML = `
     <div class="crossroads-head">
       <div class="kicker">Exit waterfall · ${fmtMoney(exitValue)}</div>
       <h2>Who got paid</h2>
+      <p>Watch the proceeds drain through the preference stack, senior first.
+         You're paid <em>last</em>.</p>
+    </div>
+    <div class="pot">
+      <div class="pot-label">Remaining to distribute</div>
+      <div class="pot-amount" id="potAmount">${fmtMoney(exitValue)}</div>
+      <div class="pot-bar"><span id="potBar" style="width:100%"></span></div>
     </div>
     <table class="waterfall">
       <thead><tr><th>Holder</th><th>Invested</th><th>Walks out</th><th>MOIC</th><th>&nbsp;</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <tbody>${order.map(rowHtml).join("")}</tbody>
     </table>
-    <p class="odds-note" style="margin-top:10px">
-      The Seed partner's personal carry on this deal: <b>${fmtMoney(carry(seed.payout, seed.invested))}</b>.
+    <div id="exitFooter"></div>`;
+
+  // staged reveal
+  let remaining = exitValue;
+  const stage = $("stage");
+  order.forEach((h, i) => {
+    setTimeout(() => {
+      const row = stage.querySelector(`tr[data-h="${h}"]`);
+      if (!row) return;
+      row.classList.remove("hidden");
+      remaining = Math.max(0, remaining - results[h].payout);
+      $("potAmount").textContent = fmtMoney(remaining);
+      $("potBar").style.width = `${(remaining / exitValue) * 100}%`;
+      if (i === order.length - 1) revealExitFooter();
+    }, 200 + i * 650);
+  });
+}
+
+function revealExitFooter() {
+  const { exitValue, results } = ui.exitResult;
+  const founder = results["Founders"].payout;
+  const seed = results["Seed"];
+
+  // counterfactual: same fate, disciplined terms every round
+  const tookHot = ui.run.history.some((h) => h.choice === "hot");
+  const cfCap = replayWithChoices(ui.run.history, () => "standard");
+  const cfNet = exitWaterfall(cfCap, exitValue).results["Founders"].payout;
+  const delta = cfNet - founder;
+
+  const lesson =
+    founder < 1
+      ? `You built a <b>${fmtMoney(exitValue)}</b> company and walked away with <b>$0</b>. The
+         ${fmtMoney(ui.run.cap.rounds.reduce((s, r) => s + r.invested, 0))} preference stack was
+         paid in full before common stock saw a cent.`
+      : `You own ${fmtPct(ui.run.cap.founderPct())} of the company, but netted
+         <b>${fmtMoney(founder)}</b> — only ${fmtPct(founder / exitValue)} of the
+         ${fmtMoney(exitValue)} headline. The gap is the preference stack and the option pool.`;
+
+  const counterfactual =
+    tookHot && delta > 1
+      ? `<div class="counterfactual">
+           <div class="kicker">The road not taken</div>
+           <p>Same fate, but disciplined terms every round: you'd have netted
+              <b>${fmtMoney(cfNet)}</b> — <b class="gain">${fmtMoney(delta)} more</b> at this
+              very same exit. Chasing hot money cost you that, holding luck constant.</p>
+         </div>`
+      : `<div class="counterfactual">
+           <div class="kicker">The road not taken</div>
+           <p>You ran the disciplined line — there was no cheaper path to this outcome given
+              your fate. Well played.</p>
+         </div>`;
+
+  $("exitFooter").innerHTML = `
+    <p class="odds-note" style="margin-top:14px">
+      The Seed partner's personal carry on this deal:
+      <b>${fmtMoney(carry(seed.payout, seed.invested))}</b>
+      (their fund's ${fmtMoic(seed.moic)} return is what carry is paid on).
     </p>
     <div class="lesson">${lesson}</div>
+    ${counterfactual}
     <div class="actions">
       <button class="ghost" id="tryAnother">Try another exit</button>
       <button class="primary" id="replay">Run it back</button>
     </div>`;
+
   $("tryAnother").addEventListener("click", () => {
     ui.exitResult = null;
     render();

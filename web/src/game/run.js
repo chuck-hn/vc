@@ -70,3 +70,19 @@ export class Run {
     return exitWaterfall(this.cap, exitValue).results["Founders"].payout;
   }
 }
+
+/**
+ * The counterfactual ("the road not taken"). Replays the run holding FATE
+ * CONSTANT (same band each round) but substituting different term-sheet
+ * choices — isolating the cost of decisions from luck (DESIGN.md §8.2, Pillar 3).
+ *   chooseFn(record, i) -> "standard" | "hot"
+ */
+export function replayWithChoices(history, chooseFn) {
+  const cap = new CapTable();
+  history.forEach((h, i) => {
+    const choice = chooseFn(h, i);
+    const terms = (choice === "hot" ? HOT_PATH : STANDARD_PATH)[i];
+    cap.raiseRound({ ...terms, preMoney: terms.preMoney * VAL_MULT[h.band] });
+  });
+  return cap;
+}
