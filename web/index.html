@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cap Table — a Venture Co-op prototype</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">◆</span>
+        <div>
+          <h1>Cap Table</h1>
+          <p class="tag">a Venture Co-op prototype · Phase B — playable Crossroads</p>
+        </div>
+      </div>
+      <ol class="rounds-progress" id="progress"></ol>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: persistent dashboard -->
+      <aside class="dash">
+        <section class="panel ownership">
+          <h2>Your ownership</h2>
+          <div class="founder-pct" id="founderPct">100.0%</div>
+          <div class="stackbar" id="stackbar"></div>
+          <ul class="legend" id="legend"></ul>
+        </section>
+
+        <section class="panel deck">
+          <h2>Fate deck <span class="hint">your luck, as you've stocked it</span></h2>
+          <div class="oddsbar" id="oddsbar"></div>
+          <ul class="deck-tally" id="deckTally"></ul>
+        </section>
+
+        <section class="panel peek">
+          <h2>If you sold today</h2>
+          <p class="peek-line" id="peekLine">—</p>
+        </section>
+      </aside>
+
+      <!-- RIGHT: the stage -->
+      <section class="stage" id="stage"><!-- rendered by app.js --></section>
+    </main>
+
+    <script type="module" src="src/ui/app.js"></script>
+  </body>
+</html>
